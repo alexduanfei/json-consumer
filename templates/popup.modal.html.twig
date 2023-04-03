@@ -1,0 +1,59 @@
+<div id="noticeModal" class="modal" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div>
+                    <div id="noticeInfo" class="hide alert alert-info">
+
+                    </div>
+
+                    <div id="noticeDanger" class="hide alert alert-danger">
+
+                    </div>
+                </div>
+                <div>
+                    <a href="javascript:$('#noticeModal').modal('hide')" type="button" class="btn btn-danger">Close</a>
+                    <a id="viewDownload" class="hide btn btn-primary" href="{{ path('feed_download', {'id': feedId}) }}">View Download</a>
+                    <a id="viewOffer" class="hide btn btn-primary" href="{{ path('offer_index', {'feedId': feedId}) }}">View Offers</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const socket = new WebSocket("{{wsHost}}:{{wsPort}}");
+    socket.addEventListener("open", function() {
+        console.log("CONNECTED");
+    });
+    socket.addEventListener("message", function(e) {
+        let result = JSON.parse(e.data);
+        if (result.feedId == {{ feedId }}) {
+            console.log(result.status);
+            if (result.status == 'Download Error' || result.status == 'Import Error') {
+                $('#noticeDanger').html(result.message);
+                $('#noticeDanger').removeClass('hide');
+                $('#noticeInfo').addClass('hide');
+            } else {
+                $('#noticeInfo').html(result.message);
+                $('#noticeInfo').removeClass('hide');
+                $('#noticeDanger').addClass('hide');
+
+                if (result.status == 'Downloaded') {
+                    $('#viewDownload').removeClass('hide');
+                    $('#viewOffer').addClass('hide');
+                } else if (result.status == 'Imported') {
+                    $('#viewOffer').removeClass('hide');
+                    $('#viewDownload').addClass('hide');
+                }
+            }
+
+            $('#noticeModal').modal('show');
+        }
+    });
+</script>
